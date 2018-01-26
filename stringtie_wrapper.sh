@@ -4,8 +4,9 @@
 shopt -s nullglob
 
 #Introduction and usage explanation
-echo -e '\E['34';'01'm-------------------RNAseq Script Wrapper-------------------\n'
-echo "This script is designed to collect working parameters/preferences for executing a child script. The child script (RNA_script_local.sh or RNA_script_cluster.sh) will perform Adapter Trimming, 3' quality filtering, HISAT2 alignment against Grch38, SAM-to-BAM conversion and BAM sorting. The way the script is executed will change depending on the parameters you set here. E.g. a different HISAT2 command will be executed depending on if the data is from paired end reads."
+echo -e '\E['34';'01'm-------------------Stringtie Script Wrapper-------------------\n'
+echo "This script is designed to collect working parameters/preferences for executing a child script. As input, this script requires sorted BAM files such as those produced using the RNA_wrapper.sh file and its child scripts. The child scripts involved in this workflow (stringtie_script_local.sh or stringtie_script_cluster.sh) will generate a GTF file for each sorted BAM file, merge these GTF files into a non-redundant list of transcripts then use this as a reference for generating abundance tables for downstream Ballgown analysis."
+echo ""
 echo "The script assumes a directory layout as follows:"
 tput sgr0
 echo "base directory/"
@@ -44,7 +45,7 @@ case $pref_check in
 esac
 
 #Preferences header
-echo -e '\E['34';'01'm\n-------------------RNAseq Script Preferences-------------------\n'
+echo -e '\E['34';'01'm\n-------------------Stringtie Script Preferences-------------------\n'
 echo "Set preferences for this script."
 tput sgr0
 
@@ -52,8 +53,8 @@ tput sgr0
 echo "Is the current directory the base directory?"
 read -n 1 -p "I.e. Does the current dirctory contain the working, reads and reference directories? [y/n] " basedir_check
 case $basedir_check in
-  y|Y) echo "[basedir]="$(pwd) > pref.tmp ;;
-  n|N) echo ""; read -p "Enter the absolute path (no trailing "/"). E.g. /path/to/base/dir " basedir_custom ; echo [basedir]="$basedir_custom" > pref.tmp ;;
+  y|Y) echo "[basedir]="$(pwd) > STpref.tmp ;;
+  n|N) echo ""; read -p "Enter the absolute path (no trailing "/"). E.g. /path/to/base/dir " basedir_custom ; echo [basedir]="$basedir_custom" > STpref.tmp ;;
   *) echo ""; echo -e '\E['31';'01'm Invalid input. Exiting.';tput sgr0; exit 1 ;;
 esac
 
@@ -61,7 +62,7 @@ esac
 echo ""
 read -n 1 -p "Has a sample basename list file (basename_list.txt) been created in the current directory? [y/n]: " basename_check
 case $basename_check in
-  y|Y) echo "[basename_check]=""$basename_check" >> pref.tmp ;;
+  y|Y) echo "[basename_check]=""$basename_check" >> STpref.tmp ;;
   *) echo ""; echo -e '\E['31';'01'm A sample basename list must be created before proceeding. Exiting.';tput sgr0; exit 1 ;;
 esac
 
@@ -69,42 +70,28 @@ esac
 echo ""
 read -p "Enter the number of processors/threads would you like to use [#] - press [ENTER] to input: " threads
 case $threads in
-  [0-999]*) echo "[threads]=""$threads" >> pref.tmp ;;
+  [0-999]*) echo "[threads]=""$threads" >> STpref.tmp ;;
   *) echo ""; echo -e '\E['31';'01'm Invalid input. Exiting.';tput sgr0; exit 1 ;;
 esac
 
 #Mem check.
 read -p "Enter the amount of memory (in GB) that would you like to use [#]. Do not add GB suffix. Only use whole numbers - press [ENTER] to input: " memory
 case $memory in
-  [0-999]*) echo "[memory]=""$memory" >> pref.tmp ;;
+  [0-999]*) echo "[memory]=""$memory" >> STpref.tmp ;;
   *) echo -e '\E['31';'01'm Invalid input. Exiting.';tput sgr0; exit 1 ;;
-esac
-
-#Paired check - can be replaced with a script that reads directory contents to see if fastq files have a _1.fastq and _2.fastq suffix
-read -n 1 -p "Are fastq files paired (ending in _1.fastq and _2.fastq) [y/n]: " paired_check
-case $paired_check in
-  y|Y|n|N) echo "[paired]=""$paired_check" >> pref.tmp ;;
-  *) echo -e '\E['31';'01'm Invalid input. Exiting';tput sgr0; exit 1 ;;
 esac
 
 #Checks to see whether this is running on a local machine or the cluster. Unsure if this check is possible to script.
 echo ""
 read -n 1 -p "Are you running this script on the PAN cluster? [y/n]: " cluster_check
 case $cluster_check in
-  y|Y|n|N) echo "[cluster]=""$cluster_check" >> pref.tmp ;;
+  y|Y|n|N) echo "[cluster]=""$cluster_check" >> STpref.tmp ;;
   *) echo ""; echo -e '\E['31';'01'm Invalid input. Exiting';tput sgr0; exit 1 ;;
 esac
 echo ""
 
-#Stringtie Check
-read -n 1 -p "Would you like to perform stringtie GTF file generation on the HISAT2/SAMtools output? [y/n]: " stringtie_check
-case $stringtie_check in
-  y|Y|n|N) echo [stringtie]="$stringtie_check" >> pref.tmp ;;
-  *) echo -e '\E['31';'01'm Invalid input. Exiting';tput sgr0; exit 1 ;;
-esac
-
 #Execution gate
-echo -e '\E['34';'01'm\n\n-------------------RNAseq Analysis Script-------------------\n'
+echo -e '\E['34';'01'm\n\n-------------------Stringtie Analysis Script-------------------\n'
 echo "Preferences have been set. Please a) programs have been set to the path variable. b) child scripts have correct paths set to programs."
 tput sgr0
 read -n 1 -p "Would you like to begin executing the analysis script? [y/n]:" run_check
@@ -118,7 +105,7 @@ esac
 
 #Parameter/preference loading
 declare -a hold_array #declare an array to pass preferences into - needs to be an indexed array as readarray does not work with associative arrays.
-readarray -t hold_array < pref.tmp #pass file contents to indexed array
+readarray -t hold_array < STpref.tmp #pass file contents to indexed array
 printf -v readstr '%s ' "${hold_array[@]}" #read contents of hold_array as a space-separated string
 sandwich="("$readstr")" #sandwiching readstr between (). Cluster bash interprets brackes differently to local bash when () used in declare so this is set via intermediate variable.
 case $cluster_check in
@@ -139,11 +126,8 @@ awk '{if ($0 ~ "#SBATCH --mem") {$0="#SBATCH --mem="var}{print $0}}' var="$memva
 fi
 
 # making scripts executable
-chmod 755 "${pref_arr[basedir]}"/scripts/RNA_script_cluster.sh
-chmod 755 "${pref_arr[basedir]}"/scripts/RNA_script_local.sh
 chmod 755 "${pref_arr[basedir]}"/scripts/stringtie_script_cluster.sh
 chmod 755 "${pref_arr[basedir]}"/scripts/stringtie_script_local.sh
-
 
 # Cluster checking and loading of appropriate scripts
 case "${pref_arr[cluster]}" in

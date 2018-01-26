@@ -1,4 +1,4 @@
-/reads#!/bin/bash
+#!/bin/bash
 
 #Prevent expansion of * when no matching files present.
 shopt -s nullglob
