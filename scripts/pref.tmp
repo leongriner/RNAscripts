@@ -1,1 +1,6 @@
-
+[basedir]=/home/lgri018/RNAseq
+[basename_check]=y
+[threads]=5
+[memory]=5
+[paired]=y
+[cluster]=y
