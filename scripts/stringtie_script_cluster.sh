@@ -1,11 +1,11 @@
 #!/bin/bash -e
-#SBATCH -J RNASeqprocessing
+#SBATCH -J stringtieprocessing
 #SBATCH --time=06:00:00     # Walltime
-#SBATCH -A uoa00585       # Project Account
+#SBATCH -A XXX       # Project Account
 #SBATCH --mem=5
 #SBATCH --cpus-per-task=5
 #SBATCH --mail-type ALL
-#SBATCH --mail-user l.griner@auckland.ac.nz
+#SBATCH --mail-user XXX
 
 #Prevent expansion of * when no matching files present.
 shopt -s nullglob
@@ -14,14 +14,11 @@ shopt -s nullglob
 echo "stringtie_script_cluster.sh load successful"
 
 #Parameter/preference loading
-declare -a SThold_array #declare an array to pass preferences into - needs to be an indexed array as readarray does not work with associative arrays.
-readarray -t SThold_array < STpref.tmp #pass file contents to indexed array
-printf -v STreadstr '%s ' "${SThold_array[@]}" #read contents of hold_array as a space-separated string
-sandwich="("$STreadstr")" #sandwiching readstr between (). Cluster bash interprets brackes differently to local bash when () used in declare so this is set via intermediate variable.
-case $STcluster_check in
-  y|Y) declare -A pref_arr="$STsandwich" ;;#pass string to declared associative array. Eval seems to work weird on te cluster but declare seems to work ok without eval.
-  n|N) eval "declare -A STpref_arr="$STsandwich"" #pass string to declared associative array. Needs to run through eval to be interepreted as a bash command.
-esac
+declare -a SThold_array
+readarray -t SThold_array < STpref.tmp
+printf -v STreadstr '%s ' "${SThold_array[@]}"
+sandwich="("$STreadstr")"
+declare -A pref_arr="$STsandwich"
 
 #Set basedir as a variable for easier referencing
 basedir="${STpref_arr[basedir]}"

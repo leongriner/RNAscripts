@@ -96,13 +96,6 @@ case $cluster_check in
 esac
 echo ""
 
-#Stringtie Check
-read -n 1 -p "Would you like to perform stringtie GTF file generation on the HISAT2/SAMtools output? [y/n]: " stringtie_check
-case $stringtie_check in
-  y|Y|n|N) echo [stringtie]="$stringtie_check" >> pref.tmp ;;
-  *) echo -e '\E['31';'01'm Invalid input. Exiting';tput sgr0; exit 1 ;;
-esac
-
 #Execution gate
 echo -e '\E['34';'01'm\n\n-------------------RNAseq Analysis Script-------------------\n'
 echo "Preferences have been set. Please a) programs have been set to the path variable. b) child scripts have correct paths set to programs."
@@ -122,8 +115,9 @@ readarray -t hold_array < pref.tmp #pass file contents to indexed array
 printf -v readstr '%s ' "${hold_array[@]}" #read contents of hold_array as a space-separated string
 sandwich="("$readstr")" #sandwiching readstr between (). Cluster bash interprets brackes differently to local bash when () used in declare so this is set via intermediate variable.
 case $cluster_check in
+  n|N) eval "declare -A pref_arr="$sandwich"" ;; #pass string to declared associative array. Needs to run through eval to be interepreted as a bash command.
   y|Y) declare -A pref_arr="$sandwich" ;;#pass string to declared associative array. Eval seems to work weird on te cluster but declare seems to work ok without eval.
-  n|N) eval "declare -A pref_arr="$sandwich"" #pass string to declared associative array. Needs to run through eval to be interepreted as a bash command.
+
 esac
 
 # Declaring an associative array allows for easy referecing of parameters vs indexed array (does not need to
@@ -135,14 +129,11 @@ if [ "${pref_arr[cluster]}" = "y" ] || [ "${pref_arr[cluster]}" = "y" ]; then
 memvar="${pref_arr[memory]}"
 threadvar="${pref_arr[threads]}"
 awk '{if ($0 ~ "#SBATCH --mem") {$0="#SBATCH --mem="var}{print $0}}' var="$memvar" scripts/RNA_script_cluster.sh | awk '{if ($0 ~ "#SBATCH --cpus-p") {$0="#SBATCH --cpus-per-task="var}{print $0}}' var="$threadvar" > scripts/RNAscript_hold.tmp && mv scripts/RNAscript_hold.tmp scripts/RNA_script_cluster.sh
-awk '{if ($0 ~ "#SBATCH --mem") {$0="#SBATCH --mem="var}{print $0}}' var="$memvar" scripts/stringtie_script_cluster.sh | awk '{if ($0 ~ "#SBATCH --cpus-p") {$0="#SBATCH --cpus-per-task="var}{print $0}}' var="$threadvar" > scripts/STscript_hold.tmp && mv scripts/STscript_hold.tmp scripts/stringtie_script_cluster.sh
 fi
 
 # making scripts executable
 chmod 755 "${pref_arr[basedir]}"/scripts/RNA_script_cluster.sh
 chmod 755 "${pref_arr[basedir]}"/scripts/RNA_script_local.sh
-chmod 755 "${pref_arr[basedir]}"/scripts/stringtie_script_cluster.sh
-chmod 755 "${pref_arr[basedir]}"/scripts/stringtie_script_local.sh
 
 
 # Cluster checking and loading of appropriate scripts
@@ -150,11 +141,4 @@ case "${pref_arr[cluster]}" in
   y|Y) echo "Loading cluster script"; sbatch "${pref_arr[basedir]}"/scripts/RNA_script_cluster.sh ;;
   n|N) echo "Loading local script"; bash "${pref_arr[basedir]}"/scripts/RNA_script_local.sh ;;
   *) echo  -e '\E['31';'01'm Cluster preferences not set. Exiting.';tput sgr0; exit 1 ;;
-esac
-
-# Cluster/stringtie preference check and loading of appropriate scripts
-case "${pref_arr[cluster]}:${pref_arr[stringtie]}" in
- y:y|Y:Y|y:Y|Y:y) echo "Loading stringtie cluster script"; sbatch "${pref_arr[basedir]}"/scripts/stringtie_script_cluster.sh ;;
- n:y|N:Y|n:Y|N:y) echo "Loading stringtie local script"; bash "${pref_arr[basedir]}"/scripts/stringtie_script_local.sh ;;
- *) echo  -e '\E['31';'01'm Cluster preferences not set. Exiting.';tput sgr0; exit 1 ;;
 esac

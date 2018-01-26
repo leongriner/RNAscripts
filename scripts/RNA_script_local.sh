@@ -7,10 +7,12 @@ shopt -s nullglob
 echo "RNA_script_local.sh load successful"
 
 #Parameter/preference loading
-declare -a hold_array #declare an array to pass preferences into - needs to be an indexed array as readarray does not work with associative arrays.
-readarray -t hold_array < pref.tmp #pass file contents to indexed array
-printf -v readstr '%s ' "${hold_array[@]}" #read contents of hold_array as a space-separated string
-eval "declare -A pref_arr=("$readstr")" #pass string to declared associative array. Needs to run through eval.
+declare -a hold_array
+readarray -t hold_array < pref.tmp
+printf -v readstr '%s ' "${hold_array[@]}"
+sandwich="("$readstr")"
+declare -A pref_arr="$sandwich"
+eval "declare -A pref_arr="$sandwich""
 
 # Declaring an associative array allows for easy referecing of parameters vs indexed array (does not need to
 # invoke reading through AWK, SED or GREP, does not need to know the index number of the parameter,

@@ -1,11 +1,11 @@
 #!/bin/bash -e
 #SBATCH -J RNASeqprocessing
 #SBATCH --time=06:00:00     # Walltime
-#SBATCH -A uoa00585       # Project Account
+#SBATCH -A XXX       # Project Account
 #SBATCH --mem=5
 #SBATCH --cpus-per-task=5
 #SBATCH --mail-type ALL
-#SBATCH --mail-user l.griner@auckland.ac.nz
+#SBATCH --mail-user XXX
 
 #Prevent expansion of * when no matching files present.
 shopt -s nullglob
