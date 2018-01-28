@@ -28,6 +28,6 @@ The scripts assume the following directory structure. GRCh38 gtf files are used 
 Ensure that the 'working' directory also contains the sample basename list (basename_list.txt).
 This file must contain a list of sample basenames (e.g. the basename for a pair of fastq files NGS_data_123_1.fastq and NGS_data_123_2.fastq is NGS_data_123).
 Each basename in the file must be on a separate line with no trailing whitespace. The file must end with the last entry, not with a new line. E.g. <br/>
-`<start of file>` NGS_data_123 `<line break>`<br/>
+`<start of file>` NGS_data_123`<line break>`<br/>
 NGS_data_456`<line break>`<br/>
 NGS_data_789`<end of file>`
