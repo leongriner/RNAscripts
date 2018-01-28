@@ -29,15 +29,16 @@ The scripts assume the following directory structure. GRCh38 gtf files are used 
 
 ### pref.tmp and STpref.tmp
 
-These files are used to generate associative arrays by child scripts. You may run child scripts directly if pref.tmp or STpref.tmp is already present. You can manually generate the these files. File contents for both include:
+These files are used to generate associative arrays by child scripts. The contents of the array determines how a script runs. You may run child scripts directly if pref.tmp or STpref.tmp is already present. You can manually generate the these files. Example file contents for both pref.tmp and STpref.tmp:
 
 `[basedir]=/home/lgri018/RNAseq  
 [basename_check]=y  
 [threads]=5  
 [memory]=5  
 [paired]=y  
-[cluster]=y  '
-    
+[cluster]=y`
+
+Set parameters based on your preferences.
 
 ### basename_list.txt
 
