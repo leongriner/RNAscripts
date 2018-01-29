@@ -23,11 +23,11 @@ RNA and stringtie wrapper scripts initiate child scripts; RNA_script_local.sh, R
 Script | Generates | Requires
 --- | --- | ---
 RNA_wrapper.sh | pref.tmp | <br/><br/>
-RNA_script_local.sh |  | pref.tmp <br/> basename_list.txt
-RNA_script_cluster.sh |  | pref.tmp <br/> basename_list.txt
+RNA_script_local.sh | sorted .bam files | pref.tmp <br/> basename_list.txt <br/> fastq files
+RNA_script_cluster.sh | sorted .bam files | pref.tmp <br/> basename_list.txt <br/> fastq files
 stringtie_wrapper.sh | STpref.tmp | <br/><br/>
-stringtie_script_local.sh |  | STpref.tmp <br/> basename_list.txt
-stringtie_script_cluster.sh |  | STpref.tmp <br/> basename_list.txt
+stringtie_script_local.sh | sample .gtf files <br/> Ballgown tables | STpref.tmp <br/> basename_list.txt <br/> sorted .bam files
+stringtie_script_cluster.sh | sample .gtf files <br/> Ballgown tables | STpref.tmp <br/> basename_list.txt <br/> sorted .bam files
 
 The scripts assume the following directory structure. GRCh38 gtf files are used as a reference by Stringtie.
 
